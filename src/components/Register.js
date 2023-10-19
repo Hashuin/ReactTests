@@ -1,47 +1,66 @@
-/* eslint-disable no-restricted-globals */
-import React, { useState } from 'react';
-import axios from 'axios';
+/* eslint-disable react-hooks/rules-of-hooks */
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 function Register() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  
 
+  
+  const navigate = useNavigate();
   const handleRegister = async () => {
-    try {
-      const response = await axios.post('http://localhost:5000/api/register', {
-        username,
-        password,
-      });
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ username, password, email }),
+    };
 
-      if (response.status === 201) {
-        // Registro exitoso, redirige al usuario a la página de inicio de sesión.
-        history.push('/login');
-      } else {
-        // Mostrar mensaje de error al usuario.
+    useEffect(() => {
+      // Redireccionar al usuario a la página principal si ya está autenticado
+      if (localStorage.getItem("token")) {
+        navigate("/login");
       }
-    } catch (error) {
-      // Manejo de errores
+    }, [navigate]);
+  
+    const response = await fetch(`http://localhost:3000/api/users`, requestOptions);
+    const data = await response.json();
+  
+    if (data.message === "Registro exitoso") {
+      alert("Usuario registrado correctamente");
+      navigate("/login");
+    } else {
+      alert("Error al registrar usuario");
     }
   };
 
   return (
     <div>
-      <h2>Registro</h2>
+      <h1>Registro</h1>
       <input
         type="text"
-        placeholder="Username"
-        value={username}
+        placeholder="Nombre de usuario"
         onChange={(e) => setUsername(e.target.value)}
       />
       <input
         type="password"
-        placeholder="Password"
-        value={password}
+        placeholder="Contraseña"
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button onClick={handleRegister}>Registrar</button>
+      <input
+        type="email"
+        placeholder="Correo electrónico"
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button onClick={handleRegister}>Registrarse</button>
+      <button onClick={() => navigate("/login")}>Ya estoy registrado</button>
     </div>
   );
+  
 }
 
 export default Register;

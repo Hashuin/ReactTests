@@ -1,50 +1,64 @@
-/* eslint-disable no-restricted-globals */
-import React, {useState} from "react";
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 
 function Login(){
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  useEffect(() => {
+    // Redireccionar al usuario a la página principal si ya está autenticado
+    if (localStorage.getItem("token")) {
+      navigate("/");
+    }
+  }, [navigate]);
+  
+
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
-        try {
-          const response = await axios.post('http://localhost:5000/api/login', {
-            username,
-            password,
-          });
-      
-          if (response.status === 200) {
-            // Autenticación exitosa, redirige al usuario a la página de inicio.
-            history.push('/dashboard');
-          } else {
-            // Mostrar mensaje de error al usuario.
-          }
-        } catch (error) {
-          // Manejo de errores
-        }   
-
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ username, password }),
+      };
+    
+      const response = await fetch(`http://localhost:3000/api/auth`, requestOptions);
+      const data = await response.json();
+    
+      if (data.message === "Autenticación Exitosa") {
+        localStorage.setItem("token", JSON.stringify(data));
+        setUsername("");
+        setPassword("");
+        navigate("/");
+      } else {
+        alert("Credenciales incorrectas");
+      }
     };
+    
 
-    return(
+    function Login() {
+      return (
         <div>
-            <h2>Login</h2>
-            <input
-                type="text"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-            />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <button onClick={handleLogin}>Login</button>
+          <h1>Inicio de sesión</h1>
+          <input
+            type="text"
+            placeholder="Nombre de usuario"
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button onClick={handleLogin}>Iniciar sesión</button>
         </div>
-    );
+      );
+    }
+    
+    
 }
 
 export default Login;
